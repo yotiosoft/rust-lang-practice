@@ -61,8 +61,8 @@ fn post_gcd(request: &mut Request) -> IronResult<Response> {
         Ok(map) => map
     };
 
-    let unparsed_numbers = match form_data.get("\n") {
-        Node => {
+    let unparsed_numbers = match form_data.get("n") {
+        None => {
             response.set_mut(status::BadRequest);
             response.set_mut(format!("form data has no 'n' parameter\n"));
             return Ok(response);
