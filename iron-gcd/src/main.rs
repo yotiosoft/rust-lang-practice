@@ -52,48 +52,51 @@ fn gcd(mut n: u64, mut m: u64) -> u64 {
 fn post_gcd(request: &mut Request) -> IronResult<Response> {
     let mut response = Response::new();
 
-    let form_data = match request.get_ref::<UrlEncodedBody>() {
-        Err(e) => {
+    // パターンマッチング
+    let form_data = match request.get_ref::<UrlEncodedBody>() {      // リクエストのボディをパース
+        Err(e) => {                                                               // エラー処理（エラーメッセージを返す）
             response.set_mut(status::BadRequest);
             response.set_mut(format!("Error parsing from data: {:?}\n", e));
             return Ok(response);
         }
-        Ok(map) => map
+        Ok(map) => map                                               // 成功時、クエリのパラメータ名と値の配列をテーブルに変換
     };
 
-    let unparsed_numbers = match form_data.get("n") {
-        None => {
+    let unparsed_numbers = match form_data.get("n") {                                 // クエリパラメータ'n'があるか？
+        None => {                                                                                   // なければエラーメッセージを返す
             response.set_mut(status::BadRequest);
             response.set_mut(format!("form data has no 'n' parameter\n"));
             return Ok(response);
         }
-        Some(nums) => nums
+        Some(nums) => nums                                                            // あればその文字列ベクタを返す
     };
 
-    let mut numbers = Vec::new();
+    let mut numbers = Vec::new();                                                         // 文字列ベクタを1つずつパース -> 符号なし64ビット変数に
     for unparsed in unparsed_numbers {
         match u64::from_str(&unparsed) {
-            Err(_) => {
+            Err(_) => {                                                                             // 1つでも失敗したらエラー
                 response.set_mut(status::BadRequest);
                 response.set_mut(
                     format!("Value for 'n' parameter not a number: {:?}\n", 
                     unparsed));
                 return Ok(response);
             }
-            Ok(n) => { numbers.push(n); }
+            Ok(n) => { numbers.push(n); }                                                      // 成功したらu64ベクタへ
         }
     }
 
+    // gcdを求める
     let mut d = numbers[0];
     for m in &numbers[1..] {
         d = gcd(d, *m);
     }
 
+    // レスポンスを生成
     response.set_mut(status::Ok);
     response.set_mut(mime!(Text/Html; Charset=Utf8));
     response.set_mut(
         format!("The gratest common divisor of the numbers {:?} is <b>{}</b>\n",
-                            numbers, d)
+                            numbers, d)         // format!: ストリームにテキストを書き出さずに文字列自体を返すマクロ
     );
     Ok(response)
 }
