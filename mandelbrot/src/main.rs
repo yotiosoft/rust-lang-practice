@@ -6,6 +6,7 @@ use std::str::FromStr;
 use image::ColorType;
 use image::png::PNGEncoder;
 use std::fs::File;
+use std::io::Write;
 
 /// <- ドキュメントコメント
 /// 'limit'を繰り返し回数の上限として、'c'がマンデルブロ集合に含まれるかを判断する。
@@ -113,17 +114,42 @@ fn render(pixels: &mut [u8],
 }
 
 // 大きさがboundsで指定したバッファpixelsをfilenameで指定されたバッファに書き出す
-fn write_image(filename: &str, pixels: &[u8], bounds: (usize, usize)) -> Result<(), std::io::Error> {
-    let output = File::create(filename)?;
+fn write_image(filename: &str, pixels: &[u8], bounds: (usize, usize)) -> Result<(), std::io::Error> {   // 失敗しうる関数はResult値を返さなければならない
+    let output = File::create(filename)?;                   // ?: 呼び出し先で失敗したら即座にそのエラーコードを返す（Err(e)の記述を省略）
 
     let encoder = PNGEncoder::new(output);
     encoder.encode(&pixels, 
                     bounds.0 as u32, bounds.1 as u32,
                     ColorType::Gray(8))?;
 
-    Ok(())
+    Ok(())          // 成功時: ()で何も返さないことを示す（ユニット; Cでいうvoid）
 }
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
     
+    if args.len() != 5 {
+        writeln!(std::io::stderr(),
+                "Usage: mandelbrot FILE PIXELS UPPERLEFT LOWERRiGHT")
+            .unwrap();
+        writeln!(std::io::stderr(),
+                "Example: {} mandel.png 1000x750 -1.20,0.35 -1,0.20",
+                args[0])
+            .unwrap();
+        std::process::exit(1);
+    }
+
+    let bounds = parse_pair(&args[2], 'x')
+        .expect("error parsing image dimensions");
+    let upper_left = parse_complex(&args[3])
+        .expect("error parsing upper left corner point");
+    let lower_right = parse_complex(&arg[4])
+        .expect("error parsing lower right corner point");
+    
+    let mut pixels = vec![0; bounds.0 * bounds.1];      // 長さbounds.0 * bounds.1, 0で初期化
+
+    render(&mut pixels, bounds, upper_left, lower_right);   // &mut pixels: pixelsの可変参照を借用
+
+    write_image(&args[1], &pixels, bounds)              // &pixels: pixelsの不変な共有参照（変更の必要がないため）
+        .expect("error write PNG file");
 }
