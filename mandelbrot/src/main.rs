@@ -144,7 +144,7 @@ fn main() {
         .expect("error parsing image dimensions");
     let upper_left = parse_complex(&args[3])
         .expect("error parsing upper left corner point");
-    let lower_right = parse_complex(&arg[4])
+    let lower_right = parse_complex(&args[4])
         .expect("error parsing lower right corner point");
     
     let mut pixels = vec![0; bounds.0 * bounds.1];      // 長さbounds.0 * bounds.1, 0で初期化
