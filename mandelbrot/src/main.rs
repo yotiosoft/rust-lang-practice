@@ -25,8 +25,8 @@ fn parse_pair<T: FromStr>(s: &str, separator: char) -> Option<(T, T)> {
     match s.find(separator) {
         None => None,
         Some(index) => {
-            match (T::from_str(&s..index), T::from_str(&s[index + 1..])) {
-                (Ok(l), Ok(r)) => Some((l, r));
+            match (T::from_str(&s[..index]), T::from_str(&s[index + 1..])) {
+                (Ok(l), Ok(r)) => Some((l, r)),
                 _ => None
             }
         }
@@ -68,11 +68,11 @@ fn pixel_to_print(bounds: (usize, usize),
                 lower_right: Complex<f64>)
     -> Complex<f64>
 {
-    let (width, height) = (lower_right.re - upper_left.re,
-                            upper_left.im lower_right.im);
+    let (width, height) = (lower_right.re - upper_left.re, upper_left.im - lower_right.im);
+
     Complex {
-        re: upper_left + pixel.0 as f64 * width  / bounds.0 as f64,
-        im: upper_left - pixel.1 as f64 * height / bounds.1 as f64  // ここが引き算となっているのはなぜか？上に動くとpixel.1は増えるが、虚部は小さくなるからだ。
+        re: upper_left.re + pixel.0 as f64 * width  / bounds.0 as f64,
+        im: upper_left.im - pixel.1 as f64 * height / bounds.1 as f64  // ここが引き算となっているのはなぜか？上に動くとpixel.1は増えるが、虚部は小さくなるからだ。
     }
 }
 
