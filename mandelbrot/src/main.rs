@@ -1,6 +1,11 @@
 extern crate num;
+extern crate image;
+
 use num::Complex;
 use std::str::FromStr;
+use image::ColorType;
+use image::png::PNGEncoder;
+use std::fs::File;
 
 /// <- ドキュメントコメント
 /// 'limit'を繰り返し回数の上限として、'c'がマンデルブロ集合に含まれるかを判断する。
@@ -82,6 +87,41 @@ fn test_pixel_to_print() {
                                 Complex { re: -1.0, im:  1.0 },
                                 Complex { re:  1.0, im: -1.0 }),
                 Complex { re: -0.5, im: -0.5 };)
+}
+
+// 矩形範囲のマンデルブロ集合をピクセルのバッファに描画する
+// 仮引数boundsはバッファpixelsの幅と高さを指定する
+// バッファpixelsはピクセルのグレースケールの幅をバイトで保持する
+// upper_leftとlower_rightはピクセルバッファの左上と右下に対応する複素平面上の点を指定する　
+fn render(pixels: &mut [u8],
+        bounds: (usize, usize),
+        upper_left: Complex<f64>,
+        lower_right: Complex<f64>)
+{
+    assert!(pixels.len() == bounds.0 * bounds.1);
+
+    for row in 0 .. bounds.1 {
+        for column in 0 .. bounds.0 {
+            let point = pixel_to_print(bounds, (column, row), upper_left, lower_right);
+            pixels[row * bounds.0 + column] = 
+                match escape_time(point, 255) {         
+                    None => 0,                          // pointがマンデルブロ集合に含まれると判断したら黒に
+                    Some(count) => 255 - count as u8    // それ以外なら円から抜けるのに長くかかった点により暗い色を割り当て
+                };
+        }
+    }
+}
+
+// 大きさがboundsで指定したバッファpixelsをfilenameで指定されたバッファに書き出す
+fn write_image(filename: &str, pixels: &[u8], bounds: (usize, usize)) -> Result<(), std::io::Error> {
+    let output = File::create(filename)?;
+
+    let encoder = PNGEncoder::new(output);
+    encoder.encode(&pixels, 
+                    bounds.0 as u32, bounds.1 as u32,
+                    ColorType::Gray(8))?;
+
+    Ok(())
 }
 
 fn main() {
