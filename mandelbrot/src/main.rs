@@ -1,5 +1,6 @@
 extern crate num;
 extern crate image;
+extern crate crossbeam;     // 並列機構
 
 use num::Complex;
 use std::str::FromStr;
@@ -68,7 +69,7 @@ fn test_parse_complex() {
 // boundsは出力画像の幅と高さをピクセル単位で与える。
 // pixelは画像上の特定のピクセルを(行, 列)ペアの形で指定する。
 // 仮引数upper_left, lower_rightは、出力画像に描画する複素平面を左上と右下で指定する。
-fn pixel_to_print(bounds: (usize, usize),
+fn pixel_to_point(bounds: (usize, usize),
                 pixel: (usize, usize),
                 upper_left: Complex<f64>,
                 lower_right: Complex<f64>)
@@ -83,8 +84,8 @@ fn pixel_to_print(bounds: (usize, usize),
 }
 
 #[test]
-fn test_pixel_to_print() {
-    assert_eq!(pixel_to_print((100, 100), (25, 75),
+fn test_pixel_to_point() {
+    assert_eq!(pixel_to_point((100, 100), (25, 75),
                                 Complex { re: -1.0, im:  1.0 },
                                 Complex { re:  1.0, im: -1.0 }),
                 Complex { re: -0.5, im: -0.5 };)
@@ -103,7 +104,7 @@ fn render(pixels: &mut [u8],
 
     for row in 0 .. bounds.1 {
         for column in 0 .. bounds.0 {
-            let point = pixel_to_print(bounds, (column, row), upper_left, lower_right);
+            let point = pixel_to_point(bounds, (column, row), upper_left, lower_right);
             pixels[row * bounds.0 + column] = 
                 match escape_time(point, 255) {         
                     None => 0,                          // pointがマンデルブロ集合に含まれると判断したら黒に
@@ -148,7 +149,26 @@ fn main() {
     
     let mut pixels = vec![0; bounds.0 * bounds.1];      // 長さbounds.0 * bounds.1, 0で初期化
 
-    render(&mut pixels, bounds, upper_left, lower_right);   // &mut pixels: pixelsの可変参照を借用
+    //render(&mut pixels, bounds, upper_left, lower_right);   // &mut pixels: pixelsの可変参照を借用
+    let threads = 8;
+    let rows_per_band = bounds.1 / threads + 1;     // 帯状の領域に何行のピクセルが入るか？
+
+    {
+        let bands: Vec<&mut [u8]> = pixels.chunks_mut(rows_per_band * bounds.0).collect();  // pixelsを帯に分割（chunks_mut: 可変な重なり合わないベクタのスライスを生成）
+        crossbeam::scope(|spawner| {
+            for (i, band) in bands.into_iter().enumerate() {
+                let top = rows_per_band * i;
+                let height = band.len() / bounds.0;
+                let band_bounds = (bounds.0, height);
+                let band_upper_left  = pixel_to_point(bounds, (0, top), upper_left, lower_right);
+                let band_lower_right = pixel_to_point(bounds, (bounds.0, top + height), upper_left, lower_right);
+
+                spawner.spawn(move || {
+                    render(band, band_bounds, band_upper_left, band_lower_right);
+                });
+            }
+        });
+    }
 
     write_image(&args[1], &pixels, bounds)              // &pixels: pixelsの不変な共有参照（変更の必要がないため）
         .expect("error write PNG file");
