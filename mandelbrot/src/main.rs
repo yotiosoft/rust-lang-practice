@@ -155,15 +155,15 @@ fn main() {
 
     {
         let bands: Vec<&mut [u8]> = pixels.chunks_mut(rows_per_band * bounds.0).collect();  // pixelsを帯に分割（chunks_mut: 可変な重なり合わないベクタのスライスを生成）
-        crossbeam::scope(|spawner| {
-            for (i, band) in bands.into_iter().enumerate() {
+        crossbeam::scope(|spawner| {                            // クロージャ式：関数のように呼び出せる値、|spawner|は引数リスト（型宣言の必要なし）で{...}は関数のボディ; crossbeam::scopeでクロージャ呼び出し、全スレッドの終了を待つ
+            for (i, band) in bands.into_iter().enumerate() {    // pixel bufferの帯領域に対してループ; into_iter()で得られるイテレータは帯領域の排他的な所有権をループ内のボディに与える -> 各スレッドに排他的に与えられる; enumerateアダプタは各要素に対してindexと組み合わせたタプルを作る
                 let top = rows_per_band * i;
                 let height = band.len() / bounds.0;
                 let band_bounds = (bounds.0, height);
                 let band_upper_left  = pixel_to_point(bounds, (0, top), upper_left, lower_right);
                 let band_lower_right = pixel_to_point(bounds, (bounds.0, top + height), upper_left, lower_right);
 
-                spawner.spawn(move || {
+                spawner.spawn(move || {         // スレッドを生成しクロージャmove || {...}を実行、moveによりクロージャの持つbandの所有権を取得する
                     render(band, band_bounds, band_upper_left, band_lower_right);
                 });
             }
