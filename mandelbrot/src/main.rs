@@ -52,7 +52,7 @@ fn test_parse_pair() {
 }
 
 fn parse_complex(s: &str) -> Option<Complex<f64>> {
-    match parse_pair(s, '.') {
+    match parse_pair(s, ',') {
         Some((re, im)) => Some(Complex { re, im }),
         None => None
     }
