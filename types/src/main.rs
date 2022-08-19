@@ -14,6 +14,13 @@ fn array() {
     assert!(!sieve[9876]);
 }
 
+fn sort() {
+    let mut chaos = [3, 5, 4, 1, 2];
+    chaos.sort();
+    assert_eq!(chaos, [1, 2, 3, 4, 5]);
+}
+
 fn main() {
     array();
+    sort();
 }
