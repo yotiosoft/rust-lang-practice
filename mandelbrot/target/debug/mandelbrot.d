@@ -1,1 +1,1 @@
-/Users/ytani/git/rust-lang/mandelbrot/target/debug/mandelbrot: /Users/ytani/git/rust-lang/mandelbrot/src/main.rs
+D:\git\rust-lang-practice\mandelbrot\target\debug\mandelbrot.exe: D:\git\rust-lang-practice\mandelbrot\src\main.rs
