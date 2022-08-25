@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 type Table = HashMap<String, Vec<String>>;
 
-fn show(table: Table) {
+fn show(table: &Table) {
     for (artist, works) in table {
         println!("works by {}:", artist);
         for work in works {
@@ -17,5 +17,5 @@ fn main() {
     table.insert("Caravaggio".to_string(), vec!["The Musicians".to_string(), "The Calling of St. Matthew".to_string()]);
     table.insert("Cellini".to_string(), vec!["Perseus with the head of Medusa".to_string(), "a salt celler".to_string()]);
 
-    show(table);
+    show(&table);        // 参照
 }
