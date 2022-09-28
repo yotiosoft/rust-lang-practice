@@ -1,3 +1,5 @@
+// Caution: does not work
+
 extern crate num;
 extern crate image;
 extern crate crossbeam;     // 並列機構
