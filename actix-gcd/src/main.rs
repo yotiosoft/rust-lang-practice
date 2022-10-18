@@ -1,10 +1,15 @@
+// reference from Programming Rust ver.2
+
 use std::str::FromStr;
 use std::env;
 use actix_web::{web, App, HttpResponse, HttpServer};
+use serde::Deserialize;
 
 fn main() {
     let server = HttpServer::new(|| {
-        App::new().route("/", web::get().to(get_index))
+        App::new()
+            .route("/", web::get().to(get_index))
+            .route("/gcd", web::post().to(post_gcd))
     });
 
     println!("Serving on http:://localhost:3000...");
@@ -26,6 +31,24 @@ fn get_index() -> HttpResponse {
                 </form>
             "#,
         )
+}
+
+#[derive(Deserialize)]
+struct GcdParameters {
+    n: u64,
+    m: u64,
+}
+
+fn post_gcd(form: web::Form<GcdParameters>) -> HttpResponse {
+    if form.n == 0 || form.m == 0 {
+        return HttpResponse::BadRequest()
+            .content_type("text/html")
+            .body("Computing the GCD with zero is boring.");
+    }
+
+    let response = format!("The gratest common divisor og the numbers {} and {} is <b>{}</b>\n", form.n, form.m, gcd(form.n, form.m));
+
+    HttpResponse::Ok().content_type("text/html").body(response)
 }
 
 fn gcd(mut n: u64, mut m: u64) -> u64 {
