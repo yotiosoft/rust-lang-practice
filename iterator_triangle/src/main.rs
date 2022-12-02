@@ -1,3 +1,5 @@
+/// ver.2 - 15. Iterator
+
 fn normal_triangle(n: i32) -> i32 {
     let mut sum = 0;
     for i in 1..=n {
