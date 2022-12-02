@@ -1,16 +1,21 @@
-use tokio::prelude::*;
-use tokio::codec::{FramedRead, LinesCodec};
-use tokio::io::{self, AsyncWriteExt};
-use tokio::fs::File;
+use tokio::io::{self, BufReader};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let stdin = io::stdin();
-    let mut reader = FramedRead::new(stdin, LinesCodec::new());
-    let line = reader.next().await.transpose()?.unwrap();
-    println!("You typed: {}", line);
-    let mut f = File::create("out.txt").await?;
-    let line = format!("LOG: read a line: {}\n", line);
-    f.write_all(line.as_bytes()).await?;
-    Ok(())
+async fn main() {
+    let mut reader = BufReader::new(io::stdin());
+    let mut lines = Vec::new();
+
+    loop {
+        let mut line = String::new();
+        let n = reader.buffer().len();
+
+        if n == 0 {
+            break;
+        }
+
+        lines.push(line);
+    }
+
+    println!("There's: {}", lines.len());
+    println!("{}", lines.join("\n"));
 }
