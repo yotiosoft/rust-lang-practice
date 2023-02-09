@@ -10,9 +10,20 @@ fn main() -> io::Result<()> {
     loop {
         buffer.clear();
         let bytes_read = reader.read_until(b'\n', &mut buffer)?;
-        println!("{}", buffer.len());
+        
+        if buffer[0] == b'\n' || buffer[0] == b'\r' {
+            println!("Empty line");
+        }
+        else {
+            println!("Non-empty line");
+        }
+        
+        println!("{} {}", buffer.len(), buffer[0]);
         if reader.has_data_left()? == false {
             println!("No more data left");
+        }
+        else {
+            println!("More data left");
         }
         if bytes_read == 0 {
             break;
