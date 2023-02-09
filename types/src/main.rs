@@ -33,4 +33,16 @@ fn main() {
     array();
     sort();
     vec();
+
+    // コマンドライン引数を文字列のベクタとして取得する
+    // cargo run Lisp Scheme C C++ Fortran
+    let languages: Vec<String> = std::env::args().skip(1).collect();
+    for l in languages {
+        println!("{}: {}", l,
+                    if l.len() % 2 == 0 {
+                        "functional"
+                    } else {
+                        "imperative"
+                    });
+    }
 }
