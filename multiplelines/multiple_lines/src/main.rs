@@ -6,13 +6,29 @@ use std::{thread, time};
 
 fn main() {
     let stdin_channel = spawn_stdin_channel();
+    let mut buffer = Vec::new();
+    let mut flag = 0;
+    let mut flag_total = 0;
     loop {
         match stdin_channel.try_recv() {
-            Ok(key) => println!("Received: {}", key),
-            Err(TryRecvError::Empty) => println!("Channel empty"),
+            Ok(key) => {
+                //println!("{} key length: {}", key, key.len());
+                buffer.push(key);
+                flag += 1;
+                flag_total += 1;
+            },
+            Err(TryRecvError::Empty) => {
+                if flag == 0 && flag_total > 0 {
+                    println!("input: {}", buffer.join(""));
+                    buffer.clear();
+                    flag_total = 0;
+                }
+
+                flag = 0;
+            },//println!("Channel empty"),
             Err(TryRecvError::Disconnected) => panic!("Channel disconnected"),
         }
-        sleep(1000);
+        sleep(1);
     }
 }
 
