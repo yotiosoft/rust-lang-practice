@@ -1,34 +1,32 @@
-#![feature(buf_read_has_data_left)]
-use std::io::{self, BufRead, BufReader};
+use std::io;
+use std::sync::mpsc;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::TryRecvError;
+use std::{thread, time};
 
-fn main() -> io::Result<()> {
-    let stdin = io::stdin();
-
-    let mut reader = BufReader::new(stdin);
-    let mut buffer = Vec::new();
-
+fn main() {
+    let stdin_channel = spawn_stdin_channel();
     loop {
-        buffer.clear();
-        let bytes_read = reader.read_until(b'\n', &mut buffer)?;
-        
-        if buffer[0] == b'\n' || buffer[0] == b'\r' {
-            println!("Empty line");
+        match stdin_channel.try_recv() {
+            Ok(key) => println!("Received: {}", key),
+            Err(TryRecvError::Empty) => println!("Channel empty"),
+            Err(TryRecvError::Disconnected) => panic!("Channel disconnected"),
         }
-        else {
-            println!("Non-empty line");
-        }
-        
-        println!("{} {}", buffer.len(), buffer[0]);
-        if reader.has_data_left()? == false {
-            println!("No more data left");
-        }
-        else {
-            println!("More data left");
-        }
-        if bytes_read == 0 {
-            break;
-        }
+        sleep(1000);
     }
+}
 
-    Ok(())
+fn spawn_stdin_channel() -> Receiver<String> {
+    let (tx, rx) = mpsc::channel::<String>();
+    thread::spawn(move || loop {
+        let mut buffer = String::new();
+        io::stdin().read_line(&mut buffer).unwrap();
+        tx.send(buffer).unwrap();
+    });
+    rx
+}
+
+fn sleep(millis: u64) {
+    let duration = time::Duration::from_millis(millis);
+    thread::sleep(duration);
 }
