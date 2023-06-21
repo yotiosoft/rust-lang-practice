@@ -1,1 +1,1 @@
-/Users/ytani/git/rust-lang/multiplelines/multiple_lines/target/debug/multiple_lines: /Users/ytani/git/rust-lang/multiplelines/multiple_lines/src/main.rs
+D:\git\rust-lang-practice\multiplelines\multiple_lines\target\debug\multiple_lines.exe: D:\git\rust-lang-practice\multiplelines\multiple_lines\src\main.rs
